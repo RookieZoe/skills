@@ -1,138 +1,99 @@
 ---
 name: audio-spliter
-description: Extract and split audio from media files using FFmpeg with intelligent silence detection. Use when users need to (1) extract audio tracks from video/audio files, (2) split long media into segments by duration, (3) find optimal cut points at silence gaps, or (4) batch process media files with smart segmentation. Supports any FFmpeg-compatible format (mp4, mkv, avi, mov, mp3, flac, wav, ogg, etc.).
-allowed-tools: [Bash(ffmpeg, ffprobe, bc, grep, sed)]
+description: "Split media files (video/audio) into audio segments by duration with silence-aware cut points using FFmpeg. Use when users need to segment long recordings, podcasts, lectures, or videos into chunks. Supports batch processing and any FFmpeg-compatible format."
+allowed-tools: [Bash(ffmpeg, ffprobe, bc, grep, sed, find)]
 ---
 
 # Audio Splitter
 
-Extract audio from media files and split into segments with intelligent silence detection for clean cut points. Perfect for splitting podcasts, lectures, or long recordings into manageable chunks.
+Segment media files into audio chunks with intelligent silence detection for clean cut points.
 
 ## Quick Start
 
 ```bash
-# Split video into 30-minute audio segments
-./scripts/split_audio.sh "podcast.mp4" 1800
+# Single file (video or audio)
+./scripts/segment_audio.sh video.mp4 1800
 
-# Split with custom silence detection
-./scripts/split_audio.sh -w 15 -n "-35dB" "lecture.mp3" 2700
+# Batch processing
+./scripts/batch_segment.sh -d ./videos 1800
 ```
 
-## Features
+## Scripts
 
-- **Silence Detection**: Find optimal cut points at natural pauses
-- **Lossless Extraction**: Copy audio stream without re-encoding
-- **Smart Segmentation**: Target duration with silence-aware adjustments
-- **Format Agnostic**: Any FFmpeg-compatible video/audio format
-- **Automatic Codec Detection**: Output matches source codec
+| Script | Purpose |
+|--------|---------|
+| `segment_audio.sh` | Segment single file (video or audio) |
+| `batch_segment.sh` | Batch wrapper for multiple files |
 
-## Supported Formats
+## segment_audio.sh
 
-- **Video**: mp4, mkv, avi, mov, webm, flv, wmv
-- **Audio**: mp3, aac, flac, wav, ogg, opus, m4a
-
-## CLI Usage
+Segment a single media file into audio chunks.
 
 ```bash
-# Basic: 30-minute segments
-./scripts/split_audio.sh "input.mp4" 1800
-
-# Custom silence detection (±15s window, -35dB threshold)
-./scripts/split_audio.sh -w 15 -n "-35dB" "input.mp4" 1800
-
-# Custom output directory
-./scripts/split_audio.sh -o ./output "input.mp4" 1800
-
-# Show help
-./scripts/split_audio.sh --help
+./scripts/segment_audio.sh [OPTIONS] <input_file> <segment_seconds>
 ```
 
-### CLI Arguments
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-w, --window` | 10 | Search window ±N seconds |
+| `-n, --noise` | -60dB | Silence threshold (dBFS) |
+| `-s, --silence` | 2 | Min silence duration (seconds) |
+| `-o, --output-dir` | input dir | Output directory |
 
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `input_file` | Input media file | Required |
-| `segment_seconds` | Target segment duration (seconds) | Required |
-| `-w, --window` | Search window ±N seconds around target | 10 |
-| `-n, --noise` | Silence threshold (dBFS) | -40dB |
-| `-s, --silence` | Minimum silence duration (seconds) | 0.5 |
-| `-o, --output-dir` | Output directory | Input file's dir |
-| `-h, --help` | Show help message | - |
+**Examples:**
+```bash
+./scripts/segment_audio.sh video.mp4 1800              # 30-min segments
+./scripts/segment_audio.sh podcast.mp3 1800
+./scripts/segment_audio.sh -w 15 -n "-35dB" lecture.mkv 2700
+```
 
-### Output Format
+## batch_segment.sh (Batch)
+
+Batch process multiple files in a directory.
+
+```bash
+./scripts/batch_segment.sh -d [OPTIONS] <input_dir> <segment_seconds>
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-d, --dir` | - | Enable batch mode |
+| `--depth` | 3 | Directory traversal depth |
+| `-w, --window` | 10 | Search window ±N seconds |
+| `-n, --noise` | -60dB | Silence threshold |
+| `-s, --silence` | 2 | Min silence duration |
+| `-o, --output-dir` | input dir | Output directory |
+
+**Examples:**
+```bash
+./scripts/batch_segment.sh -d ./lectures 1800
+./scripts/batch_segment.sh -d ./podcasts --depth 5 3600
+./scripts/batch_segment.sh -d ./videos -o ./output 1800
+```
+
+## Output Format
 
 `{source_name}_{num}_[{start}-{end}].{ext}`
 
-Example: `podcast.mp4` → `podcast_01_[0-1800].aac`, `podcast_02_[1800-3595].aac`
+Example: `video.mp4` → `video_01_[0-1800].aac`, `video_02_[1800-3595].aac`
 
-## Examples
+## Supported Formats
 
-### Split 3-Hour Podcast into 50-Minute Chapters
+- **Video**: mp4, mkv, avi, mov, webm, flv, wmv, m4v
+- **Audio**: mp3, aac, flac, wav, ogg, opus, m4a, wma
 
-```bash
-./scripts/split_audio.sh "episode.mp4" 3000
-# Output:
-#   episode_01_[0-3000].aac
-#   episode_02_[3000-6000].aac
-#   episode_03_[6000-9000].aac
-#   episode_04_[9000-10800].aac
-```
+## Detection Settings
 
-### Split Lecture with Wider Search Window
-
-```bash
-# Search ±30 seconds for silence (good for lectures with long pauses)
-./scripts/split_audio.sh -w 30 -s 1 "lecture.mp3" 1800
-```
-
-### Extract and Split to Specific Directory
-
-```bash
-./scripts/split_audio.sh -o ~/Desktop/chapters "interview.mkv" 1200
-```
-
-## Manual Operations
-
-### Probe Media Info
-
-```bash
-ffprobe "input.mp4"
-```
-
-### Extract Audio Only (No Split)
-
-```bash
-ffmpeg -i "input.mp4" -vn -acodec copy "output.aac"
-```
-
-### Detect Silence Points
-
-```bash
-ffmpeg -i "input.mp4" -af "silencedetect=noise=-40dB:duration=0.5" -f null - 2>&1 | grep -E "(silence_start|silence_end)"
-```
-
-## Detection Settings Guide
-
-| Audio Type | Noise Threshold | Window | Min Silence | Notes |
-|------------|-----------------|--------|-------------|-------|
-| Quiet studio | -50dB | 5s | 0.3s | Very sensitive |
-| Normal podcast | -40dB | 10s | 0.5s | Default |
-| Noisy recording | -35dB | 15s | 1.0s | Less sensitive |
-| Live recording | -30dB | 20s | 1.5s | Audience noise |
-
-### Adjusting Sensitivity
-
-- **More precise cuts**: Lower threshold (-50dB), shorter silence (0.3s)
-- **Fewer cuts**: Higher threshold (-30dB), longer silence (1.5s)
-- **Natural breaks**: Wider window (20-30s)
+| Audio Type | Noise | Window | Silence |
+|------------|-------|--------|---------|
+| Quiet studio | -50dB | 5s | 0.5s |
+| **Default** | -60dB | 10s | 2s |
+| Noisy recording | -35dB | 15s | 1.5s |
 
 ## Dependencies
 
-- FFmpeg with ffprobe (`brew install ffmpeg` on macOS)
+- FFmpeg with ffprobe (`brew install ffmpeg`)
 
-## Limitations
+## Related Skills
 
-- Works best with speech content
-- Very noisy recordings may need threshold adjustment
-- Cut points are approximate (within search window)
-- No chapter naming (manual rename if needed)
+- **audio-extractor**: Extract complete audio track from video (no segmentation)
