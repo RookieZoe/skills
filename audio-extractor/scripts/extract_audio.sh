@@ -88,6 +88,21 @@ echo "Input:  $input_file"
 echo "Codec:  $codec"
 echo "Output: $OUTPUT"
 
-ffmpeg -y -i "$input_file" -vn -acodec copy "$OUTPUT" 2>/dev/null
+if [ -n "$FORMAT" ]; then
+    # Transcode to specified format
+    case "$FORMAT" in
+        mp3)  ffmpeg -y -i "$input_file" -vn -acodec libmp3lame -q:a 2 "$OUTPUT" < /dev/null 2>/dev/null ;;
+        aac)  ffmpeg -y -i "$input_file" -vn -acodec aac -b:a 192k "$OUTPUT" < /dev/null 2>/dev/null ;;
+        opus) ffmpeg -y -i "$input_file" -vn -acodec libopus -b:a 128k "$OUTPUT" < /dev/null 2>/dev/null ;;
+        flac) ffmpeg -y -i "$input_file" -vn -acodec flac "$OUTPUT" < /dev/null 2>/dev/null ;;
+        wav)  ffmpeg -y -i "$input_file" -vn -acodec pcm_s16le "$OUTPUT" < /dev/null 2>/dev/null ;;
+        ogg)  ffmpeg -y -i "$input_file" -vn -acodec libvorbis -q:a 5 "$OUTPUT" < /dev/null 2>/dev/null ;;
+        *)    ffmpeg -y -i "$input_file" -vn "$OUTPUT" < /dev/null 2>/dev/null ;;
+    esac
+    echo "Transcoded to: $FORMAT"
+else
+    # Lossless copy
+    ffmpeg -y -i "$input_file" -vn -acodec copy "$OUTPUT" < /dev/null 2>/dev/null
+fi
 
 echo "Done: $OUTPUT"
