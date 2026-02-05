@@ -93,7 +93,3 @@ Example: `video.mp4` → `video_01_[0-1800].aac`, `video_02_[1800-3595].aac`
 ## Dependencies
 
 - FFmpeg with ffprobe (`brew install ffmpeg`)
-
-## Related Skills
-
-- **audio-extractor**: Extract complete audio track from video (no segmentation)
