@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "upload-to-s3like"
+version = "0.1.0"
+description = "Upload files to S3 and S3-compatible object storage services"
+requires-python = ">=3.10"
+dependencies = ["boto3>=1.28.0"]
+
+[project.scripts]
+upload-to-s3like = "upload_to_s3like.cli:main"
