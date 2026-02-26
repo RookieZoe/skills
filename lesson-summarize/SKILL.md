@@ -14,13 +14,13 @@ Run this skill when you have a lesson directory containing course materials.
 
 1.  **Analyze Input Directory**
     *   Scan the current or specified directory for available materials.
-        *   **Courseware**: `*.md` (OCR result) or `*.pdf` (Original).
+        *   **Courseware**: `*.pdf`, `*.pptx`, `*.docx` (Original Courseware) or `*.md` (OCR result). Note: Original courseware and OCR-recognized files are equally important.
         *   **Transcript**: `*-文字稿.txt` or `*-transcription.txt`.
-        *   **QA Notes**: `*-课堂笔记*.txt` (Teacher's QA/Notes).
+        *   **QA Notes**: `*-课堂笔记.txt` or `*-note.txt` or `*-qa.txt` (Teacher's QA/Notes).
 
 2.  **Content Extraction Strategy**
     *   **Source Roles**:
-        *   **Courseware (MD/PDF)**: The **Skeleton**. Defines the logical flow and key concepts.
+        *   **Courseware (PDF/PPTX/DOCX/MD)**: The **Skeleton**. Defines the logical flow and key concepts. Original courseware and OCR Markdown provide the core structural outline with equal importance.
         *   **Transcript**: The **Flesh**. Provides detailed explanations, examples, and nuance.
         *   **QA Notes**: The **Appendix/Supplement**. Contains specific answers to student questions, often supplementary to the main lecture.
 
